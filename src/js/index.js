@@ -6,6 +6,9 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 let serach = '';
 let pageInt = 1;
 let img = '';
+let page = 1;
+
+let gallerysl = new SimpleLightbox('.gallery a');
 
 const inputSerach = document.querySelector('[name=searchQuery]');
 const btnSerach = document.querySelector('[type=submit]');
@@ -15,7 +18,7 @@ const imgTyp = 'image_type=photo';
 const key = 'key=45960838-6aa652e2d176ee6c6d86f24d6&q';
 const orientation = 'orientation=horizontal';
 const safesearch = 'safesearch = true';
-const page = `page=${pageInt}`;
+
 const per_page = 'per_page=40';
 
 btnload.setAttribute('disabled', '');
@@ -26,13 +29,6 @@ const func = async () => {
       `https://pixabay.com/api/?${key}=${serach}&${imgTyp}&${orientation}&${safesearch}&${per_page}&${page}`
     );
 
-    if (get.data.totalHits <= 40 * pageInt) {
-      Notiflix.Notify.info(
-        "We're sorry, but you've reached the end of search results."
-      );
-      btnload.setAttribute('disabled', '');
-      return;
-    }
     if (get.data.hits.length == 0) {
       Notiflix.Notify.info(
         'Sorry, there are no images matching your search query. Please try again.'
@@ -40,7 +36,14 @@ const func = async () => {
       btnload.setAttribute('disabled', '');
       return;
     }
-
+    if (get.data.totalHits <= 40 * pageInt) {
+      Notiflix.Notify.info(
+        "We're sorry, but you've reached the end of search results."
+      );
+      btnload.setAttribute('disabled', '');
+      return;
+    }
+    console.log(get.data.totalHits);
     for (let i = 0; i < get.data.hits.length; i++) {
       img += `<div class="photo-card">
   <a href="${get.data.hits[i].largeImageURL}"><img src="${get.data.hits[i].webformatURL}" alt="${get.data.hits[i].tags}" width="150" height="100" loading="lazy" /></a>
@@ -61,11 +64,10 @@ const func = async () => {
 </div>`;
     }
     const gallery = document.querySelector('.gallery');
-
     gallery.innerHTML = img;
-    let gallerysl = new SimpleLightbox('.gallery a');
-    gallerysl.refresh();
-    console.log('hi');
+
+    gallerysl.destroy();
+    gallerysl = new SimpleLightbox('.gallery a');
   } catch (error) {
     console.log(error);
   }
@@ -80,13 +82,15 @@ btnSerach.addEventListener('click', e => {
   func();
 });
 
-btnload.addEventListener('click', () => {
-  pageInt += 1;
+btnload.addEventListener('click', e => {
+  e.preventDefault();
+  pageInt = pageInt + 1;
+  page = `page=${pageInt}`;
+
   func();
 });
 
 inputSerach.addEventListener('input', () => {
-  pageInt = 1;
   img = '';
   serach = encodeURIComponent(inputSerach.value);
   btnload.setAttribute('disabled', '');
